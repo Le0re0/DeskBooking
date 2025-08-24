@@ -10,4 +10,6 @@ public class Employee
     public string LastName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string FullName => $"{FirstName} {LastName}";
+    public List<Booking> Bookings { get; set; } = new();
+
 }

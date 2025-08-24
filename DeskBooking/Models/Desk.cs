@@ -27,5 +27,6 @@ public class BookedDesk
     public DateTime BookedFrom { get; set; }
     public DateTime BookedUntil { get; set; }
 
+
     public required Employee Employee { get; set; }
 }

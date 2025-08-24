@@ -10,11 +10,9 @@
 
   <ItemGroup>
     <Folder Include="Converters\" />
-    <Folder Include="Services\" />
     <Folder Include="Resources\" />
     <Folder Include="Styles\" />
     <Folder Include="Viewmodels\" />
-    <Folder Include="Views\" />
   </ItemGroup>
 
   <ItemGroup>
