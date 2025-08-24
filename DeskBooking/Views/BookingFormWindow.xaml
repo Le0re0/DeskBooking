@@ -1,0 +1,40 @@
+<Window x:Class="DeskBooking.Views.BookingFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Booking Form" Height="300" Width="400" WindowStartupLocation="CenterOwner">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Booking Details" FontWeight="Bold" FontSize="20" Margin="0,0,0,18"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,8">
+            <TextBlock Text="Employee:" Width="110" VerticalAlignment="Center"/>
+            <ComboBox Width="200" ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}" DisplayMemberPath="FullName"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="0,0,0,8">
+            <TextBlock Text="Desk:" Width="110" VerticalAlignment="Center"/>
+            <ComboBox Width="200" ItemsSource="{Binding Desks}" SelectedItem="{Binding SelectedDesk, Mode=TwoWay}" DisplayMemberPath="DeskNumber"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Margin="0,0,0,8">
+            <TextBlock Text="From:" Width="110" VerticalAlignment="Center"/>
+            <DatePicker SelectedDate="{Binding BookedFrom}" Width="200"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="4" Margin="0,0,0,8">
+            <TextBlock Text="Until:" Width="110" VerticalAlignment="Center"/>
+            <DatePicker SelectedDate="{Binding BookedUntil}" Width="200"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="5" HorizontalAlignment="Right">
+            <Button MinWidth="60" Margin="0,0,8,0" IsDefault="True" Click="Ok_Click" Style="{StaticResource MaterialDesignRaisedButton}">
+                <TextBlock Text="OK" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
+            <Button MinWidth="60" IsCancel="True" Style="{StaticResource MaterialDesignOutlinedButton}">
+                <TextBlock Text="Cancel" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

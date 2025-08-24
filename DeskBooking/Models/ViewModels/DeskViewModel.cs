@@ -4,15 +4,17 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using DeskBooking.Models;
+using DeskBooking.Services;
 
 namespace DeskBooking.Views
 {
     public class DeskViewModel : INotifyPropertyChanged
     {
-        private ObservableCollection<Desk> _desks;
-        private ObservableCollection<Desk> _filteredDesks;
-        private Desk _selectedDesk;
-        private string _searchText;
+        private readonly CrudService<Desk> _service = new();
+        private ObservableCollection<Desk> _desks = new();
+        private ObservableCollection<Desk> _filteredDesks = new();
+        private Desk? _selectedDesk;
+        private string _searchText = string.Empty;
 
         public ObservableCollection<Desk> Desks
         {
@@ -20,7 +22,7 @@ namespace DeskBooking.Views
             set { _filteredDesks = value; OnPropertyChanged(); }
         }
 
-        public Desk SelectedDesk
+        public Desk? SelectedDesk
         {
             get => _selectedDesk;
             set { _selectedDesk = value; OnPropertyChanged(); }
@@ -33,50 +35,62 @@ namespace DeskBooking.Views
         }
 
         public ICommand AddCommand { get; }
+        public ICommand EditCommand { get; }
         public ICommand DeleteCommand { get; }
 
         public DeskViewModel()
         {
-            // Example data (replace with data access logic)
-            _desks = new ObservableCollection<Desk>
-            {
-                new Desk { Id = 1, DeskNumber = "D-101", IsActive = true },
-                new Desk { Id = 2, DeskNumber = "D-102", IsActive = false }
-            };
-            _filteredDesks = new ObservableCollection<Desk>(_desks);
-
+            LoadDesks();
             AddCommand = new RelayCommand(AddDesk);
-            DeleteCommand = new RelayCommand(DeleteDesk);
+            EditCommand = new RelayCommand(EditDesk, _ => SelectedDesk != null);
+            DeleteCommand = new RelayCommand(DeleteDesk, _ => SelectedDesk != null);
+        }
+
+        private void LoadDesks()
+        {
+            _desks = new ObservableCollection<Desk>(_service.GetAll());
+            FilterDesks();
         }
 
         private void FilterDesks()
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
-                Desks = new ObservableCollection<Desk>(_desks);
-            else
-                Desks = new ObservableCollection<Desk>(
-                    _desks.Where(d => d.DeskNumber.ToLower().Contains(SearchText.ToLower()))
-                );
+            Desks = string.IsNullOrWhiteSpace(SearchText)
+                ? new ObservableCollection<Desk>(_desks)
+                : new ObservableCollection<Desk>(_desks.Where(d => d.DeskNumber.Contains(SearchText, System.StringComparison.OrdinalIgnoreCase)));
         }
 
-        private void AddDesk(object obj)
+        private void AddDesk(object? obj)
         {
-            var newDesk = new Desk { Id = _desks.Any() ? _desks.Max(d => d.Id) + 1 : 1, DeskNumber = "New Desk", IsActive = true };
-            _desks.Add(newDesk);
-            FilterDesks();
-        }
-
-        private void DeleteDesk(object obj)
-        {
-            if (SelectedDesk != null)
+            var desk = new Desk();
+            var form = new DeskFormWindow(desk);
+            if (form.ShowDialog() == true)
             {
-                _desks.Remove(SelectedDesk);
-                FilterDesks();
+                _service.Add(desk);
+                LoadDesks();
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        private void EditDesk(object? obj)
+        {
+            if (SelectedDesk == null) return;
+            var deskCopy = new Desk { Id = SelectedDesk.Id, DeskNumber = SelectedDesk.DeskNumber, IsActive = SelectedDesk.IsActive };
+            var form = new DeskFormWindow(deskCopy);
+            if (form.ShowDialog() == true)
+            {
+                _service.Update(deskCopy);
+                LoadDesks();
+            }
+        }
+
+        private void DeleteDesk(object? obj)
+        {
+            if (SelectedDesk == null) return;
+            _service.Delete(SelectedDesk.Id);
+            LoadDesks();
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

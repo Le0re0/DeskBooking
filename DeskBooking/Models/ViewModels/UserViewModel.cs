@@ -4,15 +4,17 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using DeskBooking.Models;
+using DeskBooking.Services;
 
 namespace DeskBooking.Views
 {
     public class UserViewModel : INotifyPropertyChanged
     {
-        private ObservableCollection<Employee> _users;
-        private ObservableCollection<Employee> _filteredUsers;
-        private Employee _selectedUser;
-        private string _searchText;
+        private readonly CrudService<Employee> _service = new();
+        private ObservableCollection<Employee> _users = new();
+        private ObservableCollection<Employee> _filteredUsers = new();
+        private Employee? _selectedUser;
+        private string _searchText = string.Empty;
 
         public ObservableCollection<Employee> Users
         {
@@ -20,7 +22,7 @@ namespace DeskBooking.Views
             set { _filteredUsers = value; OnPropertyChanged(); }
         }
 
-        public Employee SelectedUser
+        public Employee? SelectedUser
         {
             get => _selectedUser;
             set { _selectedUser = value; OnPropertyChanged(); }
@@ -33,52 +35,65 @@ namespace DeskBooking.Views
         }
 
         public ICommand AddCommand { get; }
+        public ICommand EditCommand { get; }
         public ICommand DeleteCommand { get; }
 
         public UserViewModel()
         {
-            // Example data (replace with data access logic)
-            _users = new ObservableCollection<Employee>
-            {
-                new Employee { Id = 1, FirstName = "Alice", LastName = "Smith", Email = "alice@example.com" },
-                new Employee { Id = 2, FirstName = "Bob", LastName = "Jones", Email = "bob@example.com" }
-            };
-            _filteredUsers = new ObservableCollection<Employee>(_users);
-
+            LoadUsers();
             AddCommand = new RelayCommand(AddUser);
-            DeleteCommand = new RelayCommand(DeleteUser);
+            EditCommand = new RelayCommand(EditUser, _ => SelectedUser != null);
+            DeleteCommand = new RelayCommand(DeleteUser, _ => SelectedUser != null);
+        }
+
+        private void LoadUsers()
+        {
+            _users = new ObservableCollection<Employee>(_service.GetAll());
+            FilterUsers();
         }
 
         private void FilterUsers()
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
-                Users = new ObservableCollection<Employee>(_users);
-            else
-                Users = new ObservableCollection<Employee>(
-                    _users.Where(u => u.FirstName.ToLower().Contains(SearchText.ToLower()) ||
-                                      u.LastName.ToLower().Contains(SearchText.ToLower()) ||
-                                      u.Email.ToLower().Contains(SearchText.ToLower()))
-                );
+            Users = string.IsNullOrWhiteSpace(SearchText)
+                ? new ObservableCollection<Employee>(_users)
+                : new ObservableCollection<Employee>(_users.Where(u =>
+                    u.FirstName.Contains(SearchText, System.StringComparison.OrdinalIgnoreCase) ||
+                    u.LastName.Contains(SearchText, System.StringComparison.OrdinalIgnoreCase) ||
+                    u.Email.Contains(SearchText, System.StringComparison.OrdinalIgnoreCase)));
         }
 
-        private void AddUser(object obj)
+        private void AddUser(object? obj)
         {
-            var newUser = new Employee { Id = _users.Any() ? _users.Max(u => u.Id) + 1 : 1, FirstName = "New", LastName = "User", Email = "newuser@example.com" };
-            _users.Add(newUser);
-            FilterUsers();
-        }
-
-        private void DeleteUser(object obj)
-        {
-            if (SelectedUser != null)
+            var user = new Employee();
+            var form = new UserFormWindow(user);
+            if (form.ShowDialog() == true)
             {
-                _users.Remove(SelectedUser);
-                FilterUsers();
+                _service.Add(user);
+                LoadUsers();
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        private void EditUser(object? obj)
+        {
+            if (SelectedUser == null) return;
+            var userCopy = new Employee { Id = SelectedUser.Id, FirstName = SelectedUser.FirstName, LastName = SelectedUser.LastName, Email = SelectedUser.Email };
+            var form = new UserFormWindow(userCopy);
+            if (form.ShowDialog() == true)
+            {
+                _service.Update(userCopy);
+                LoadUsers();
+            }
+        }
+
+        private void DeleteUser(object? obj)
+        {
+            if (SelectedUser == null) return;
+            _service.Delete(SelectedUser.Id);
+            LoadUsers();
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

@@ -20,7 +20,8 @@
         <!-- DataGrid -->
         <DataGrid Grid.Row="1" ItemsSource="{Binding Desks}" 
                   SelectedItem="{Binding SelectedDesk, Mode=TwoWay}" 
-                  AutoGenerateColumns="False" Margin="0,0,0,6">
+                  AutoGenerateColumns="False" Margin="0,0,0,6"
+                  IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}"/>
                 <DataGridTextColumn Header="Desk Number" Binding="{Binding DeskNumber}"/>
@@ -29,8 +30,15 @@
         </DataGrid>
         <!-- Buttons -->
         <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Left">
-            <Button Content="Add" Command="{Binding AddCommand}" Margin="0,0,6,0"/>
-            <Button Content="Delete" Command="{Binding DeleteCommand}" />
+            <Button Command="{Binding AddCommand}" Margin="0,0,6,0" MinWidth="80">
+                <TextBlock Text="Add" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
+            <Button Command="{Binding EditCommand}" Margin="0,0,6,0" MinWidth="80">
+                <TextBlock Text="Edit" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
+            <Button Command="{Binding DeleteCommand}" MinWidth="80">
+                <TextBlock Text="Delete" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
         </StackPanel>
     </Grid>
 </UserControl>
